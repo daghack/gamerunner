@@ -1,0 +1,109 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/chzyer/readline",
+			"repository": "https://github.com/chzyer/readline",
+			"revision": "2972be24d48e78746da79ba8e24e8b488c9880de",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/go-gl/gl/v2.1/gl",
+			"repository": "https://github.com/go-gl/gl",
+			"revision": "68e2537930806bfcee1b92a0e14b4e9b8bb3a3e3",
+			"branch": "master",
+			"path": "/v2.1/gl"
+		},
+		{
+			"importpath": "github.com/go-gl/glfw/v3.2/glfw",
+			"repository": "https://github.com/go-gl/glfw",
+			"revision": "46a8d530c3268b31eeb1310f30fe42be1cae98f2",
+			"branch": "master",
+			"path": "/v3.2/glfw"
+		},
+		{
+			"importpath": "github.com/golang/freetype/raster",
+			"repository": "https://github.com/golang/freetype",
+			"revision": "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4",
+			"branch": "master",
+			"path": "/raster"
+		},
+		{
+			"importpath": "github.com/golang/freetype/truetype",
+			"repository": "https://github.com/golang/freetype",
+			"revision": "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4",
+			"branch": "master",
+			"path": "/truetype"
+		},
+		{
+			"importpath": "github.com/gopherjs/gopherjs/js",
+			"repository": "https://github.com/gopherjs/gopherjs",
+			"revision": "0892b62f0d9fb5857760c3cfca837207185117ee",
+			"branch": "master",
+			"path": "/js"
+		},
+		{
+			"importpath": "github.com/gopherjs/gopherwasm/js",
+			"repository": "https://github.com/gopherjs/gopherwasm",
+			"revision": "0765e455aaf6485aba6462d42b1ee7afc2e4a82c",
+			"branch": "master",
+			"path": "/js"
+		},
+		{
+			"importpath": "github.com/hajimehoshi/ebiten",
+			"repository": "https://github.com/hajimehoshi/ebiten",
+			"revision": "d10d319d7efe7b0b5add4944db5ba40bc4e7059e",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/hajimehoshi/go-mp3",
+			"repository": "https://github.com/hajimehoshi/go-mp3",
+			"revision": "3c185f92b8dbceefa913b64cae634ba47f452769",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/hajimehoshi/oto",
+			"repository": "https://github.com/hajimehoshi/oto",
+			"revision": "b091cc6aeb6d039040fd838139b5139c5b54ff73",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/jfreymuth/oggvorbis",
+			"repository": "https://github.com/jfreymuth/oggvorbis",
+			"revision": "9504566bd4b4afd13a5e5acb770934d58c87028a",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/jfreymuth/vorbis",
+			"repository": "https://github.com/jfreymuth/vorbis",
+			"revision": "2f16367d086d143e8e946cc5ee24618147d673dc",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/theckman/go-flock",
+			"repository": "https://github.com/theckman/go-flock",
+			"revision": "b139a2487364247d91814e4a7c7b8fdc69e342b2",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/yuin/gopher-lua",
+			"repository": "https://github.com/yuin/gopher-lua",
+			"revision": "46796da1b0b4794e1e341883a399f12cc7574b55",
+			"branch": "master"
+		},
+		{
+			"importpath": "golang.org/x/image/font",
+			"repository": "https://go.googlesource.com/image",
+			"revision": "c73c2afc3b812cdd6385de5a50616511c4a3d458",
+			"branch": "master",
+			"path": "/font"
+		},
+		{
+			"importpath": "golang.org/x/image/math/fixed",
+			"repository": "https://go.googlesource.com/image",
+			"revision": "c73c2afc3b812cdd6385de5a50616511c4a3d458",
+			"branch": "master",
+			"path": "/math/fixed"
+		}
+	]
+}
