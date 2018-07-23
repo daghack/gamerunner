@@ -60,7 +60,7 @@ func update(screen *ebiten.Image) error {
 
 func main() {
 	//router := eventrouter.NewRouter("test_router.lua")
-	space, err := eventrouter.NewRouter("space.lua")
+	space, err := eventrouter.NewRouter("world_manager.lua")
 	if err != nil {
 		panic(err)
 	}
