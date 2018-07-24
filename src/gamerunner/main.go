@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gamerunner/entity"
+	"gamerunner/entity/area"
 	"gamerunner/eventrouter"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -14,9 +15,13 @@ import (
 )
 
 var (
+	index      int
 	tilesImage *ebiten.Image
 	walktick   <-chan time.Time
+	roundtick  <-chan time.Time
+	tiletick   <-chan time.Time
 	walkleft   bool
+	areatest   *area.Area
 )
 
 func init() {
@@ -24,12 +29,19 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	defer lwf.Close()
 	img, _, err := image.Decode(lwf)
 	if err != nil {
 		panic(err)
 	}
 	tilesImage, _ = ebiten.NewImageFromImage(img, ebiten.FilterDefault)
-	walktick = time.Tick(500 * time.Millisecond)
+	walktick = time.Tick(400 * time.Millisecond)
+	roundtick = time.Tick(1600 * time.Millisecond)
+	tiletick = time.Tick(350 * time.Millisecond)
+	areatest, err = area.NewArea("test_area", "test_area.lua")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func update(screen *ebiten.Image) error {
@@ -39,22 +51,30 @@ func update(screen *ebiten.Image) error {
 	select {
 	case <-walktick:
 		walkleft = !walkleft
+	case <-tiletick:
+		err := areatest.UpdateTiles()
+		if err != nil {
+			panic(err)
+		}
+	case <-roundtick:
+		index = (index + 1) % 4
 	default:
 	}
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS %0.2f", ebiten.CurrentFPS()))
 	imageMax := tilesImage.Bounds().Max
 	tilewidth := imageMax.X / 2
-	tileheight := imageMax.Y / 3
+	tileheight := imageMax.Y / 4
 	op := &ebiten.DrawImageOptions{}
 	if walkleft {
-		r := image.Rect(0, 0, tilewidth, tileheight)
+		r := image.Rect(0, index*tileheight, tilewidth, (index+1)*tileheight)
 		op.SourceRect = &r
 	} else {
-		r := image.Rect(tilewidth, 0, imageMax.X, tileheight)
+		r := image.Rect(tilewidth, index*tileheight, imageMax.X, (index+1)*tileheight)
 		op.SourceRect = &r
 	}
-	op.GeoM.Scale(512.0/float64(tilewidth), 512.0/float64(tileheight))
+	areatest.Draw(screen)
+	op.GeoM.Translate(64, 64)
 	err := screen.DrawImage(tilesImage, op)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS %0.2f", ebiten.CurrentFPS()))
 	return err
 }
 
@@ -71,7 +91,7 @@ func main() {
 	space.AddToLua("space", l)
 	//router.AddToLua("Router", l)
 	go e.EventLoop()
-	err = ebiten.Run(update, 512, 512, 2, "Tiles Test")
+	err = ebiten.Run(update, 256, 256, 2, "Tiles Test")
 	if err != nil {
 		panic(err)
 	}
