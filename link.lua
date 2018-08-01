@@ -1,5 +1,5 @@
 entity = {
-	texture = "resources/images/link.png",
+	tileset = "resources/images/link_walking.png",
 	animations = {
 		walking_left = {
 			frames = {4, 5},

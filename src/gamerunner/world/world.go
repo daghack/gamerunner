@@ -2,20 +2,17 @@ package world
 
 import (
 	"gamerunner/area"
+	"gamerunner/entity"
 	"gamerunner/eventrouter"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/yuin/gopher-lua"
-	"image"
-	_ "image/png"
-	"os"
-	"time"
 )
 
 type World struct {
 	state               *lua.LState
 	manager             *eventrouter.Router
 	areaMap             map[string]*area.Area
-	linkTS              *ebiten.Image
+	entityMap           map[string]*entity.Entity
 	keyboardControllers []chan lua.LValue
 	keyboardstate       map[ebiten.Key]bool
 }
@@ -34,6 +31,7 @@ func LoadWorld(worldfile string) (*World, error) {
 		state:         l,
 		manager:       router,
 		areaMap:       map[string]*area.Area{},
+		entityMap:     map[string]*entity.Entity{},
 		keyboardstate: map[ebiten.Key]bool{},
 	}
 	err = toret.loadAreas()
@@ -67,58 +65,9 @@ func (w *World) loadAreas() error {
 }
 
 func (w *World) LoadEntity(id, entityfile string, controller chan lua.LValue) error {
-	// #TODO THIS IS NOT HOW I WANT TO DO THIS: FOR INITIAL TESTING ONLY
-	err := w.state.DoFile(entityfile)
-	if err != nil {
-		return err
-	}
-	w.state.SetGlobal("controller", lua.LChannel(controller))
-	lwf, err := os.Open("resources/images/link_walking.png")
-	if err != nil {
-		return err
-	}
-	defer lwf.Close()
-	img, _, err := image.Decode(lwf)
-	if err != nil {
-		return err
-	}
-	w.linkTS, err = ebiten.NewImageFromImage(img, ebiten.FilterDefault)
+	var err error
+	w.entityMap[id], err = entity.NewEntity(entityfile, controller)
 	return err
-}
-
-func (w *World) drawEntity(screen *ebiten.Image) error {
-	// #TODO THIS IS NOT HOW I WANT TO DO THIS: FOR INITIAL TESTING ONLY
-	timestamp := lua.LNumber(float64(time.Now().UnixNano() / 1000000))
-	err := w.state.CallByParam(lua.P{
-		Fn:      w.state.GetGlobal("update_state"),
-		Protect: true,
-	}, timestamp)
-	if err != nil {
-		return err
-	}
-	err = w.state.CallByParam(lua.P{
-		Fn:      w.state.GetGlobal("active_frame"),
-		NRet:    1,
-		Protect: true,
-	})
-	if err != nil {
-		return err
-	}
-	frame := w.state.ToInt(-1)
-	w.state.Pop(1)
-	imageMax := w.linkTS.Bounds().Max
-	tilewidth := imageMax.X / 2
-	tileheight := imageMax.Y / 4
-	x := frame % 2
-	y := frame / 2
-	r := image.Rect(x*tilewidth, y*tileheight, (x+1)*tilewidth, (y+1)*tileheight)
-	op := &ebiten.DrawImageOptions{
-		SourceRect: &r,
-	}
-	op.GeoM.Translate(64, 64)
-	screen.DrawImage(w.linkTS, op)
-
-	return nil
 }
 
 func (w *World) Run(screen *ebiten.Image) error {
@@ -142,7 +91,13 @@ func (w *World) Run(screen *ebiten.Image) error {
 		}
 	}
 	w.areaMap["test_area"].Draw(screen)
-	return w.drawEntity(screen)
+	for _, entity := range w.entityMap {
+		err := entity.Draw(screen)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (w *World) KeyboardController() chan lua.LValue {
