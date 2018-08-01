@@ -24,3 +24,12 @@ function update_tiles()
 	end
 	reload_map()
 end
+
+last_updated = 0
+
+function update_area(milliseconds)
+	if milliseconds - last_updated > 500 then
+		update_tiles()
+		last_updated = milliseconds
+	end
+end

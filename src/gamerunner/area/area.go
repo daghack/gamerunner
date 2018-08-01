@@ -6,6 +6,7 @@ import (
 	"image"
 	_ "image/png"
 	"os"
+	"time"
 )
 
 type Area struct {
@@ -84,11 +85,16 @@ func (area *Area) loadArea() error {
 	return area.renderMap(tileset, int(tilesize), int(mapwidth), int(mapheight), tilemap)
 }
 
-func (area *Area) Tick(state *lua.LState) int {
-	return 0
+func (area *Area) updateArea() error {
+	timestamp := lua.LNumber(float64(time.Now().UnixNano() / 1000000))
+	return area.state.CallByParam(lua.P{
+		Fn:      area.state.GetGlobal("update_area"),
+		Protect: true,
+	}, timestamp)
 }
 
 func (area *Area) Draw(screen *ebiten.Image) error {
+	area.updateArea()
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(256.0/128.0, 256.0/128.0)
 	return screen.DrawImage(area.renderedMap, op)

@@ -10,6 +10,16 @@ type Router struct {
 	listenerMap map[string]chan lua.LValue
 }
 
+func NewRouterFromState(state *lua.LState) (*Router, error) {
+	toret := &Router{
+		state:       state,
+		listenerMap: map[string]chan lua.LValue{},
+	}
+	state.SetGlobal("listener_exists", state.NewFunction(toret.listenerExists))
+	toret.AddToLua("self", state)
+	return toret, nil
+}
+
 func NewRouter(routingFile string) (*Router, error) {
 	l := lua.NewState()
 	l.OpenLibs()

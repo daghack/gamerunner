@@ -23,3 +23,7 @@ function post_leave(id, chan)
 	self.send_event(id, "space_leave")
 	return true
 end
+
+areas = {
+	test_area = "test_area.lua"
+}
