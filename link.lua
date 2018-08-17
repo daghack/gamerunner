@@ -1,21 +1,22 @@
 entity = {
 	tileset = "resources/images/link_walking.png",
+	velocity = 3.0,
 	animations = {
 		walking_left = {
 			frames = {4, 5},
-			interval = 0.4
+			interval = 0.15
 		},
 		walking_right = {
 			frames = {6, 7},
-			interval = 0.4
+			interval = 0.15
 		},
 		walking_up = {
 			frames = {2, 3},
-			interval = 0.4
+			interval = 0.15
 		},
 		walking_down = {
 			frames = {0, 1},
-			interval = 0.4
+			interval = 0.15
 		},
 		idle_left = {
 			frames = {4},
@@ -38,9 +39,11 @@ entity = {
 
 state = {
 	animation = "walking_down",
-	last_updated = 0.0,
+	last_updated = 0,
 	animation_index = 0,
-	location = "test_area"
+	location = "test_area",
+	x_pos = 4,
+	y_pos = 4
 }
 
 function set_idle()
@@ -60,31 +63,54 @@ function set_idle()
 	state.animation_index = 0
 end
 
-function update_state(milliseconds)
-	channel.select(
-		{"|<-", controller, function(ok, event)
-			if event.pressed then
-				if event.key == 32 then
-					state.animation = "walking_up"
-				elseif event.key == 28 then
-					state.animation = "walking_down"
-				elseif event.key == 10 then
-					state.animation = "walking_left"
-				elseif event.key == 13 then
-					state.animation = "walking_right"
-				end
-			else
-				set_idle()
-			end
-		end},
-		{"default", function()
-		end}
-	)
+events_emptied = false
+events_present = false
+
+command_handler = {
+	move_up = "walking_up",
+	move_down = "walking_down",
+	move_left = "walking_left",
+	move_right = "walking_right"
+}
+
+function update_state(milliseconds, updates_per_second)
+	if updates_per_second == 0 then
+		updates_per_second = 60
+	end
+	events_emptied = false
+	events_present = false
+	while not events_emptied do
+		channel.select(
+			{"|<-", controller, function(ok, event)
+				events_present = true
+				state.animation = command_handler[event]
+			end},
+			{"default", function()
+				events_emptied = true
+			end}
+		)
+	end
+	if not events_present then
+		set_idle()
+	end
+	move(updates_per_second)
 	local animation = entity.animations[state.animation]
 	if milliseconds - state.last_updated > (1000 * animation.interval) then
 		state.animation_index = state.animation_index + 1
 		state.animation_index = state.animation_index % #animation.frames
 		state.last_updated = milliseconds
+	end
+end
+
+function move(updates_per_second)
+	if state.animation == "walking_down" then
+		state.y_pos = state.y_pos + (entity.velocity / updates_per_second)
+	elseif state.animation == "walking_up" then
+		state.y_pos = state.y_pos - (entity.velocity / updates_per_second)
+	elseif state.animation == "walking_left" then
+		state.x_pos = state.x_pos - (entity.velocity / updates_per_second)
+	elseif state.animation == "walking_right" then
+		state.x_pos = state.x_pos + (entity.velocity / updates_per_second)
 	end
 end
 
