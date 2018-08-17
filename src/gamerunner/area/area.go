@@ -31,17 +31,35 @@ func NewArea(areaId, luafile string) (*Area, error) {
 	return toret, nil
 }
 
-func (area *Area) renderMap(tileset *ebiten.Image, tilesize, w, h int, tilemap map[int]int) error {
-	//return fmt.Errorf("Not yet implemented")
+func (area *Area) renderMap(tileset *ebiten.Image, tilesize, w, h int, layers *lua.LTable, undrawn_tiles_table *lua.LTable) error {
 	var err error
 	area.renderedMap, err = ebiten.NewImage(tilesize*w, tilesize*h, ebiten.FilterDefault)
 	if err != nil {
-		return nil
+		return err
 	}
-	k := w * h
+	undrawn_tiles := map[int]bool{}
+	undrawn_tiles_table.ForEach(func(key, val lua.LValue) {
+		undrawn_tiles[int(val.(lua.LNumber))] = true
+	})
+	layers.ForEach(func(key, val lua.LValue) {
+		layer_tilemap := map[int]int{}
+		layer := val.(*lua.LTable)
+		layer.ForEach(func(key, value lua.LValue) {
+			layer_tilemap[int(key.(lua.LNumber))-1] = int(value.(lua.LNumber))
+		})
+		area.renderLayer(tileset, tilesize, w, h, layer_tilemap, undrawn_tiles)
+	})
+	return nil
+}
+
+func (area *Area) renderLayer(tileset *ebiten.Image, tilesize, w, h int, layer map[int]int, undrawn_tiles map[int]bool) error {
 	tileXNum := tileset.Bounds().Max.X / tilesize
+	k := len(layer)
 	for i := 0; i < k; i += 1 {
-		t := tilemap[i]
+		t := layer[i]
+		if undrawn_tiles[t] {
+			continue
+		}
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64((i%w)*tilesize), float64((i/w)*tilesize))
 		sx := (t % tileXNum) * tilesize
@@ -65,6 +83,8 @@ func (area *Area) loadArea() error {
 	mapwidth := config.RawGetString("map_width").(lua.LNumber)
 	mapheight := config.RawGetString("map_height").(lua.LNumber)
 	tilemapTable := config.RawGetString("tilemap").(*lua.LTable)
+	layers := tilemapTable.RawGetString("layers").(*lua.LTable)
+	undrawn_tiles := tilemapTable.RawGetString("undrawn_tiles").(*lua.LTable)
 	tilesetR, err := os.Open(string(tilesetfile))
 	if err != nil {
 		return err
@@ -78,11 +98,12 @@ func (area *Area) loadArea() error {
 	if err != nil {
 		return err
 	}
-	tilemap := map[int]int{}
-	tilemapTable.ForEach(func(key, value lua.LValue) {
-		tilemap[int(key.(lua.LNumber))-1] = int(value.(lua.LNumber))
-	})
-	return area.renderMap(tileset, int(tilesize), int(mapwidth), int(mapheight), tilemap)
+	return area.renderMap(tileset, int(tilesize), int(mapwidth), int(mapheight), layers, undrawn_tiles)
+}
+
+func (area *Area) TileSize() float64 {
+	config := area.state.GetGlobal("map_config").(*lua.LTable)
+	return float64(config.RawGetString("tile_size").(lua.LNumber))
 }
 
 func (area *Area) updateArea() error {
