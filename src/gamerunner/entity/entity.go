@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"gamerunner/controllers"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/yuin/gopher-lua"
 	"image"
@@ -10,20 +11,22 @@ import (
 )
 
 type Entity struct {
-	state   *lua.LState
-	tileset *ebiten.Image
+	state      *lua.LState
+	tileset    *ebiten.Image
+	controller controllers.Controller
 }
 
-func NewEntity(entityfile string, controller chan lua.LValue) (*Entity, error) {
+func NewEntity(entityfile string, controller controllers.Controller) (*Entity, error) {
 	l := lua.NewState()
 	toret := &Entity{
-		state: l,
+		state:      l,
+		controller: controller,
 	}
 	err := l.DoFile(entityfile)
 	if err != nil {
 		return nil, err
 	}
-	l.SetGlobal("controller", lua.LChannel(controller))
+	l.SetGlobal("controller", lua.LChannel(controller.CommandChannel()))
 	entityTable := l.GetGlobal("entity").(*lua.LTable)
 	tilesetFile := string(entityTable.RawGetString("tileset").(lua.LString))
 	lwf, err := os.Open(tilesetFile)
@@ -42,12 +45,13 @@ func NewEntity(entityfile string, controller chan lua.LValue) (*Entity, error) {
 	return toret, nil
 }
 
-func (e *Entity) Draw(screen *ebiten.Image) error {
+func (e *Entity) Draw(screen *ebiten.Image, tilesize float64) error {
 	timestamp := lua.LNumber(float64(time.Now().UnixNano() / 1000000))
+	ups := lua.LNumber(ebiten.CurrentTPS())
 	err := e.state.CallByParam(lua.P{
 		Fn:      e.state.GetGlobal("update_state"),
 		Protect: true,
-	}, timestamp)
+	}, timestamp, ups)
 	if err != nil {
 		return err
 	}
@@ -70,8 +74,15 @@ func (e *Entity) Draw(screen *ebiten.Image) error {
 	op := &ebiten.DrawImageOptions{
 		SourceRect: &r,
 	}
-	op.GeoM.Translate(64, 64)
+	state := e.state.GetGlobal("state").(*lua.LTable)
+	currentX := float64(state.RawGetString("x_pos").(lua.LNumber)) * tilesize
+	currentY := float64(state.RawGetString("y_pos").(lua.LNumber)) * tilesize
+	op.GeoM.Translate(currentX, currentY)
 	screen.DrawImage(e.tileset, op)
 
 	return nil
+}
+
+func (e *Entity) Controller() controllers.Controller {
+	return e.controller
 }
