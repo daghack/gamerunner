@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	ebiten.SetFullscreen(true)
+	ebiten.SetFullscreen(false)
 	defer ebiten.SetFullscreen(false)
 	w, err := world.LoadWorld("world_manager.lua")
 	if err != nil {
